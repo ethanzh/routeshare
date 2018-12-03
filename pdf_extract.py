@@ -1,6 +1,9 @@
 import pandas as pd
 import textract
-text = textract.process('course.pdf', encoding='ascii')
+
+CATALOGUE = "spring19"
+
+text = textract.process(CATALOGUE + ".pdf", encoding='ascii')
 text = text.decode("utf-8")
 lines = text.split("\n")
 
@@ -54,4 +57,4 @@ for i in range(len(lines)):
                 print(data)
 
 df = pd.DataFrame(data=df_data)
-df.to_csv("course_data.csv", encoding='utf-8')
+df.to_csv(CATALOGUE + ".csv", encoding='utf-8')
