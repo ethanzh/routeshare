@@ -3,8 +3,10 @@
 ## TODO:
 - [x] Construct list of coordinates based on start and end point
 - [x] Scrape for all UT building addresses
-- [ ] Create back-end for user log-in, info input
 - [x] Retrieve building from unique course ID
+- [x] Create map visualizations between two courses
+- [ ] Tidy pdf_extract.py code
+- [ ] Create back-end for user log-in, info input
 
 This is a program where users will be able to add friends via their UTEID or UT e-mails.
 

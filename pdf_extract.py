@@ -17,7 +17,7 @@ df_data = {
 
 for i in range(len(lines)):
     current_line = lines[i]
-    if (len(current_line) > 0 and current_line[0] == " "):
+    if len(current_line) > 0 and current_line[0] == " ":
         code = current_line[1:6]
         day = current_line[7:]
         # take second line, split time and building
@@ -36,25 +36,21 @@ for i in range(len(lines)):
             df_data["end_time"].append(end_time)
             df_data["building"].append(building)
 
-            #print(code, day, times, building)
         # the line after is the professor's name, so go ahead by 2 more (3 total)
         next_line = lines[i + 3]
-        if (len(next_line) == 1):
+        if len(next_line) == 1:
             next_day = str(next_line)
             next_line = lines[i + 4]
             data = next_line.split(" ")
-            try:
-                if len(data) > 4:
-                    start_time = data[0]
-                    end_time = data[2]
-                    building = data[3]
-                    df_data["code"].append(code)
-                    df_data["day"].append(next_day)
-                    df_data["start_time"].append(start_time)
-                    df_data["end_time"].append(end_time)
-                    df_data["building"].append(building)
-            except IndexError:
-                print(data)
+            if len(data) > 4:
+                start_time = data[0]
+                end_time = data[2]
+                building = data[3]
+                df_data["code"].append(code)
+                df_data["day"].append(next_day)
+                df_data["start_time"].append(start_time)
+                df_data["end_time"].append(end_time)
+                df_data["building"].append(building)
 
 df = pd.DataFrame(data=df_data)
 df.to_csv(CATALOGUE + ".csv", encoding='utf-8')
