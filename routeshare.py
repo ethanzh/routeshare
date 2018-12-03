@@ -1,9 +1,10 @@
-from flask import Flask
+from flask import Flask, render_template
 import pandas as pd
 import polyline
 import requests
+import json
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 
 class_df = pd.read_csv("fall18.csv")
 building_df = pd.read_csv("building_data.csv")
@@ -29,20 +30,23 @@ def process_class_id(class_id_1=None, class_id_2=None):
     url = "https://maps.googleapis.com/maps/api/directions/json?origin={0}&destination={1} + " \
           "&key=AIzaSyCDXE6q_zHm19AprJL4CvHn-HkNbaFMDro&mode=walking".format(class_1_address, class_2_address)
 
-    data = requests.get(url).json()
+    # Get only the data needed from API resopnse
+    data = requests.get(url).json()["routes"][0]["legs"][0]
 
-    end_location = data["routes"][0]["legs"][0]["end_location"]
-    end_location = (end_location["lat"], end_location["lng"])
-    data = data["routes"][0]["legs"][0]["steps"]
     coordinates = []
-    for i in data:
-        start = (i["start_location"]["lat"], i["start_location"]["lng"])
-        coordinates.append(start)
 
-        coordinates.append(end_location)
+    # Iterate through response data, adding the start location of each "move"
+    for i in data["steps"]:
+        coordinates.append((i["start_location"]["lat"], i["start_location"]["lng"]))
 
+    # Append the end location (we didn't get end locations in the above loop)
+    end_location = (data["end_location"]["lat"],
+                    data["end_location"]["lng"])
+    coordinates.append(end_location)
+
+    # Encode polyline, create URL
     encoded_polyline = polyline.encode(coordinates)
     static_map_url = "https://maps.googleapis.com/maps/api/staticmap?size=400x400" + \
                      "&key=AIzaSyCDXE6q_zHm19AprJL4CvHn-HkNbaFMDro&path=enc:{0}".format(encoded_polyline)
 
-    return static_map_url
+    return render_template('map.html', map_url=static_map_url)
