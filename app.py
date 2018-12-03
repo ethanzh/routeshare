@@ -45,6 +45,4 @@ def process_class_id(class_id_1=None, class_id_2=None):
     static_map_url = "https://maps.googleapis.com/maps/api/staticmap?size=400x400" + \
                      "&key=AIzaSyCDXE6q_zHm19AprJL4CvHn-HkNbaFMDro&path=enc:{0}".format(encoded_polyline)
 
-
     return static_map_url
-
