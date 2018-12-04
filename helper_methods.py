@@ -10,7 +10,8 @@ def two_lines(building_1, building_2, building_3, building_4):
     polyline_2 = get_polyline(building_3, building_4)
 
     return "https://maps.googleapis.com/maps/api/staticmap?size=800x400" + \
-           "&key=AIzaSyCDXE6q_zHm19AprJL4CvHn-HkNbaFMDro&path=color:red|enc:{0}&path=color:blue|enc:{1}".format(polyline_1, polyline_2)
+           "&key=AIzaSyCDXE6q_zHm19AprJL4CvHn-HkNbaFMDro" + \
+           "&path=color:red|enc:{0}&path=color:blue|enc:{1}".format(polyline_1, polyline_2)
 
 
 def get_polyline(building_1, building_2):

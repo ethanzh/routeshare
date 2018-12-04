@@ -9,7 +9,7 @@ class_df = pd.read_csv("fall18.csv")
 
 
 @app.route('/')
-def main():
+def home_page():
     return app.send_static_file("html/index.html")
 
 """
