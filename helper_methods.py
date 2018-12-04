@@ -5,7 +5,15 @@ import requests
 building_df = pd.read_csv("building_data.csv")
 
 
-def create_map_image(building_1, building_2):
+def two_lines(building_1, building_2, building_3, building_4):
+    polyline_1 = get_polyline(building_1, building_2)
+    polyline_2 = get_polyline(building_3, building_4)
+
+    return "https://maps.googleapis.com/maps/api/staticmap?size=800x400" + \
+           "&key=AIzaSyCDXE6q_zHm19AprJL4CvHn-HkNbaFMDro&path=color:red|enc:{0}&path=color:blue|enc:{1}".format(polyline_1, polyline_2)
+
+
+def get_polyline(building_1, building_2):
     # Get building addresses
     class_1_address = building_df.loc[building_df['code'] == building_1]["address"].values[0]
     class_2_address = building_df.loc[building_df['code'] == building_2]["address"].values[0]
@@ -33,4 +41,4 @@ def create_map_image(building_1, building_2):
     static_map_url = "https://maps.googleapis.com/maps/api/staticmap?size=400x400" + \
                      "&key=AIzaSyCDXE6q_zHm19AprJL4CvHn-HkNbaFMDro&path=enc:{0}".format(encoded_polyline)
 
-    return static_map_url
+    return encoded_polyline
