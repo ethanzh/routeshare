@@ -5,16 +5,81 @@ import requests
 building_df = pd.read_csv("building_data.csv")
 
 
+class Vertex:
+    def __init__(self, lat, lng, slope):
+        self.lat = lat
+        self.lng = lng
+        self.slope = slope
+
+    def __str__(self):
+        return "({0},{1}), m={2}".format(self.lat, self.lng, self.slope)
+
+    def __eq__(self, other):
+        return self.slope == other.slope
+
+
+def map_url_from_polyline(encoded_polyline):
+    return "https://maps.googleapis.com/maps/api/staticmap?size=800x400" + \
+           "&key=AIzaSyCDXE6q_zHm19AprJL4CvHn-HkNbaFMDro" + \
+           "&path=color:red|enc:{0}".format(encoded_polyline)
+
+
 def two_lines(building_1, building_2, building_3, building_4):
     polyline_1 = get_polyline(building_1, building_2)
     polyline_2 = get_polyline(building_3, building_4)
+
+    get_overlap(building_1, building_2, building_3, building_4)
 
     return "https://maps.googleapis.com/maps/api/staticmap?size=800x400" + \
            "&key=AIzaSyCDXE6q_zHm19AprJL4CvHn-HkNbaFMDro" + \
            "&path=color:red|enc:{0}&path=color:blue|enc:{1}".format(polyline_1, polyline_2)
 
 
-def get_polyline(building_1, building_2):
+def get_overlap(building_1, building_2, building_3, building_4):
+    line_1 = get_coordinates(building_1, building_2)
+    line_2 = get_coordinates(building_3, building_4)
+
+    line_1_vertices = []
+    line_2_vertices = []
+
+    # print("line 1")
+    for i in range(len(line_1) - 1):
+        current_slope = get_slope(line_1[i], line_1[i + 1])
+        # print(current_slope)
+        line_1_vertices.append(Vertex(line_1[i][0], line_1[i][1], current_slope))
+    # print("line 2")
+    for i in range(len(line_2) - 1):
+        current_slope = get_slope(line_2[i], line_2[i + 1])
+        # print(current_slope)
+        line_2_vertices.append(Vertex(line_2[i][0], line_2[i][1], current_slope))
+
+    shared_vertices = []
+
+    for i in range(0, len(line_1_vertices) - 1):
+        if line_1_vertices[i] in line_2_vertices:
+            shared_vertices.append(line_1_vertices[i])
+            shared_vertices.append(line_1_vertices[i + 1])
+           # print(i)
+
+    return get_map_from_coordinates(shared_vertices)
+
+
+def get_map_from_coordinates(vertices):
+    coordinates = [(x.lat, x.lng) for x in vertices]
+    for i in coordinates:
+        print(i)
+    if len(coordinates) > 0:
+        encoded_polyline = polyline.encode(coordinates)
+    else:
+        encoded_polyline = ""
+    return map_url_from_polyline(encoded_polyline)
+
+
+def get_slope(point_1, point_2):
+    return (point_2[1] - point_1[1]) / (point_2[0] - point_1[0])
+
+
+def get_coordinates(building_1, building_2):
     # Get building addresses
     class_1_address = building_df.loc[building_df['code'] == building_1]["address"].values[0]
     class_2_address = building_df.loc[building_df['code'] == building_2]["address"].values[0]
@@ -37,9 +102,14 @@ def get_polyline(building_1, building_2):
                     data["end_location"]["lng"])
     coordinates.append(end_location)
 
+    return coordinates
+
+
+def get_polyline(building_1, building_2):
+
+    coordinates = get_coordinates(building_1, building_2)
+
     # Encode polyline, create URL
     encoded_polyline = polyline.encode(coordinates)
-    static_map_url = "https://maps.googleapis.com/maps/api/staticmap?size=400x400" + \
-                     "&key=AIzaSyCDXE6q_zHm19AprJL4CvHn-HkNbaFMDro&path=enc:{0}".format(encoded_polyline)
 
     return encoded_polyline
