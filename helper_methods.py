@@ -15,7 +15,9 @@ class Vertex:
         return "({0},{1}), m={2}".format(self.lat, self.lng, self.slope)
 
     def __eq__(self, other):
-        return self.slope == other.slope
+        # This is a temporary workaround, we want this to take
+        # lat and lng into account also
+        return abs(self.slope - other.slope) < 0.4
 
 
 def map_url_from_polyline(encoded_polyline):
@@ -42,15 +44,11 @@ def get_overlap(building_1, building_2, building_3, building_4):
     line_1_vertices = []
     line_2_vertices = []
 
-    # print("line 1")
     for i in range(len(line_1) - 1):
         current_slope = get_slope(line_1[i], line_1[i + 1])
-        # print(current_slope)
         line_1_vertices.append(Vertex(line_1[i][0], line_1[i][1], current_slope))
-    # print("line 2")
     for i in range(len(line_2) - 1):
         current_slope = get_slope(line_2[i], line_2[i + 1])
-        # print(current_slope)
         line_2_vertices.append(Vertex(line_2[i][0], line_2[i][1], current_slope))
 
     shared_vertices = []
@@ -59,7 +57,6 @@ def get_overlap(building_1, building_2, building_3, building_4):
         if line_1_vertices[i] in line_2_vertices:
             shared_vertices.append(line_1_vertices[i])
             shared_vertices.append(line_1_vertices[i + 1])
-           # print(i)
 
     return get_map_from_coordinates(shared_vertices)
 
