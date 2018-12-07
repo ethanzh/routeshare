@@ -6,10 +6,12 @@ building_df = pd.read_csv("building_data.csv")
 
 
 class Vertex:
-    def __init__(self, lat, lng, slope):
+    def __init__(self, lat, lng, slope, next_lat, next_lng):
         self.lat = lat
         self.lng = lng
         self.slope = slope
+        self.next_lat = next_lat
+        self.next_lng = next_lng
 
     def __str__(self):
         return "({0},{1}), m={2}".format(self.lat, self.lng, self.slope)
@@ -17,7 +19,8 @@ class Vertex:
     def __eq__(self, other):
         # This is a temporary workaround, we want this to take
         # lat and lng into account also
-        return abs(self.slope - other.slope) < 0.4
+        # Return true if slopes are within 10% of each other
+        return abs((self.slope - other.slope) / other.slope) * 100 < 10
 
 
 def map_url_from_polyline(encoded_polyline):
@@ -46,25 +49,80 @@ def get_overlap(building_1, building_2, building_3, building_4):
 
     for i in range(len(line_1) - 1):
         current_slope = get_slope(line_1[i], line_1[i + 1])
-        line_1_vertices.append(Vertex(line_1[i][0], line_1[i][1], current_slope))
+        line_1_vertices.append(Vertex(line_1[i][0], line_1[i][1], current_slope, line_1[i + 1][0], line_1[i + 1][1]))
     for i in range(len(line_2) - 1):
         current_slope = get_slope(line_2[i], line_2[i + 1])
-        line_2_vertices.append(Vertex(line_2[i][0], line_2[i][1], current_slope))
+        line_2_vertices.append(Vertex(line_2[i][0], line_2[i][1], current_slope, line_2[i + 1][0], line_2[i + 1][1]))
 
     shared_vertices = []
 
+    """
     for i in range(0, len(line_1_vertices) - 1):
-        if line_1_vertices[i] in line_2_vertices:
+        if i in line_2_vertices:
             shared_vertices.append(line_1_vertices[i])
             shared_vertices.append(line_1_vertices[i + 1])
+            
+            for j in range(0, len(line_2_vertices)):
+                if line_1_vertices[i] == line_2_vertices[j]:
+                    shared_vertices.append(line_1_vertices[i])
+                    shared_vertices.append(line_1_vertices[i + 1])
+                    #print(line_1_vertices[i].slope)
+            #if line_1_vertices[i] in line_2_vertices:
+            
+    """
+
+
+    # We want behavior to change as soon as we find a match
+    # It shouldn't matter where we start from, because we only care about overlap
+    # Go to first 'equal' spot
+
+    # made index_1 relate to the larger list
+    if len(line_1_vertices) > len(line_2_vertices):
+        traverse = line_1_vertices
+        other = line_2_vertices
+    else:
+        traverse = line_2_vertices
+        other = line_2_vertices
+
+    i1 = -1
+    j2 = -1
+
+    for i in range(0, len(traverse)):
+        for j in range(0, len(other)):
+            if i == j:
+                i1 = i
+                j2 = j
+                break
+
+    shared_vertices.append(traverse[i1])
+
+    filtered_traverse = traverse[i1 + 1:]
+    filtered_other = traverse[j2 + 1:]
+
+    if len(filtered_traverse) > len(filtered_other):
+        even_more_filtered = filtered_traverse
+        even_more_filtered_other = filtered_other
+    else:
+        even_more_filtered = filtered_other
+        even_more_filtered_other = filtered_traverse
+
+    # both lists start at 0
+
+    # continue from known 'same' point
+    for i in range(0, len(even_more_filtered_other)):
+        if even_more_filtered[i] == even_more_filtered_other[i]:
+            shared_vertices.append(even_more_filtered[i])
+        else:
+            break
+
+    print(shared_vertices)
 
     return get_map_from_coordinates(shared_vertices)
 
 
 def get_map_from_coordinates(vertices):
     coordinates = [(x.lat, x.lng) for x in vertices]
-    for i in coordinates:
-        print(i)
+
     if len(coordinates) > 0:
         encoded_polyline = polyline.encode(coordinates)
     else:
@@ -85,9 +143,12 @@ def get_coordinates(building_1, building_2):
     url = "https://maps.googleapis.com/maps/api/directions/json?origin={0}&destination={1} + " \
           "&key=AIzaSyCDXE6q_zHm19AprJL4CvHn-HkNbaFMDro&mode=walking".format(class_1_address, class_2_address)
 
+    print(url)
+
     # Get only the data needed from API resopnse
     data = requests.get(url).json()["routes"][0]["legs"][0]
 
+    print(data)
     coordinates = []
 
     # Iterate through response data, adding the start location of each "move"
