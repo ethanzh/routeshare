@@ -23,3 +23,4 @@ def process_four_buildings(building_1=None, building_2=None, building_3=None, bu
         map_url=map_url,
         shared_url=shared_url
     )
+
